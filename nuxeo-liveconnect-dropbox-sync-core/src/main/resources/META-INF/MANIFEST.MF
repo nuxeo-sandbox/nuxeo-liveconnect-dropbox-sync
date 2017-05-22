@@ -1,0 +1,13 @@
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
+Manifest-Version: 1.0
+Bundle-Vendor: org.nuxeo.liveconnect.dropbox.sync
+Bundle-Version: 1.0.0
+Bundle-Name: nuxeo-liveconnect-dropbox-sync-core
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: nuxeo-liveconnect-dropbox-sync-core;singleton=true
+Nuxeo-Component: OSGI-INF/service-contrib.xml,
+ OSGI-INF/type-contrib.xml,
+ OSGI-INF/schema-contrib.xml,
+ OSGI-INF/operation-contrib.xml,
+ OSGI-INF/queue-contrib.xml,

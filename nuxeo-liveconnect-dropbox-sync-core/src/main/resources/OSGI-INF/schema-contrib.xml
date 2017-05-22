@@ -1,0 +1,5 @@
+<component name="org.nuxeo.liveconnect.dropbox.sync.schema">
+    <extension target="org.nuxeo.ecm.core.schema.TypeService" point="schema">
+        <schema name="liveconnect" prefix="lc" override="true" src="data/schemas/liveconnect.xsd"/>
+    </extension>
+</component>
