@@ -5,6 +5,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.ecm.automation.AutomationService;
@@ -18,6 +19,8 @@ import org.nuxeo.ecm.core.test.annotations.Granularity;
 import org.nuxeo.ecm.core.test.annotations.RepositoryConfig;
 import org.nuxeo.ecm.core.work.api.Work;
 import org.nuxeo.ecm.core.work.api.WorkManager;
+import org.nuxeo.ecm.platform.oauth2.tokens.NuxeoOAuth2Token;
+import org.nuxeo.ecm.platform.test.PlatformFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -39,7 +42,9 @@ public class TestSyncDropboxContentOp {
 
     @Test
     public void shouldCallWithParameters() throws OperationException {
-        AuthenticationHelper.createToken(session.getPrincipal().getName(),"dropbox");
+        NuxeoOAuth2Token token = AuthenticationHelper.createToken(session.getPrincipal().getName(),"dropbox");
+        Assume.assumeTrue(token.getAccessToken()!=null);
+
         DocumentModel rootFolder = session.createDocumentModel(session.getRootDocument().getPathAsString(),
                 "rootFolder","Folder");
 

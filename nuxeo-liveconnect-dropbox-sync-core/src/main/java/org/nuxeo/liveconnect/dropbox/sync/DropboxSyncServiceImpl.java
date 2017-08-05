@@ -1,9 +1,10 @@
 package org.nuxeo.liveconnect.dropbox.sync;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Locale;
-
+import com.dropbox.core.DbxException;
+import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.*;
+import com.google.api.client.auth.oauth2.StoredCredential;
 import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.core.blob.BlobManager;
 import org.nuxeo.ecm.liveconnect.core.LiveConnectFileInfo;
@@ -18,8 +19,9 @@ import org.nuxeo.runtime.model.ComponentInstance;
 import org.nuxeo.runtime.model.DefaultComponent;
 import org.nuxeo.runtime.transaction.TransactionHelper;
 
-import com.dropbox.core.*;
-import com.google.api.client.auth.oauth2.StoredCredential;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Locale;
 
 public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxSyncService {
 
@@ -89,41 +91,55 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
 
 
     protected void syncUserFolder(NuxeoOAuth2Token token, DocumentModel root) throws IOException {
-        DbxRequestConfig config = new DbxRequestConfig(APPLICATION_NAME, Locale.getDefault().toString());
-        DbxClient dbxClient = new DbxClient(config, token.getAccessToken());
+        DbxRequestConfig config = DbxRequestConfig.newBuilder(APPLICATION_NAME).
+                withUserLocale(Locale.getDefault().toString()).
+                build();
+
+        DbxClientV2 dbxClient = new DbxClientV2(config, token.getAccessToken());
 
         String userId = token.getServiceLogin();
 
         DocumentModel userRoot = getOrCreateUserRoot(root,token.getNuxeoLogin(),userId);
         String deltaKey =(String) userRoot.getPropertyValue("lc:deltakey");
 
-        DbxDelta<DbxEntry> delta;
+        ListFolderResult changes;
         try {
-            delta = dbxClient.getDelta(deltaKey);
+            if (deltaKey!=null) {
+                changes = dbxClient.files().listFolderContinue(deltaKey);
+            } else {
+                changes = dbxClient.files().listFolder("");
+            }
         } catch (DbxException e) {
             throw new NuxeoException(e);
         }
 
+        boolean hasMoreEntries;
+
         do {
-            for (DbxDelta.Entry entry : delta.entries) {
-                if (entry.metadata == null) {
-                    System.out.println("Deleted: " + entry.lcPath);
-                    if (entry.metadata instanceof DbxEntry.Folder) {
-                        continue;
-                    }
-                    deleteFileDocument(userRoot,userId,entry.lcPath);
+            for (Metadata entry : changes.getEntries()) {
+                if (entry instanceof DeletedMetadata) {
+                    System.out.println("Deleted: " + entry.getPathLower());
+                    deleteFileDocument(userRoot,userId,entry.getPathLower());
                 } else {
-                    if (entry.metadata instanceof DbxEntry.Folder) {
+                    if (entry instanceof FolderMetadata) {
                         continue;
                     }
-                    DbxEntry.File dbxFile = (DbxEntry.File) entry.metadata;
-                    getOrCreateFileDocument(userRoot,userId,dbxFile);
-                    System.out.println("Added or modified: " + entry.lcPath);
+                    FileMetadata metadata = (FileMetadata) entry;
+                    getOrCreateFileDocument(userRoot,userId,metadata);
+                    System.out.println("Added or modified: " + metadata.getPathLower());
                 }
             }
-        } while (delta.hasMore);
+            hasMoreEntries = changes.getHasMore();
+            if (hasMoreEntries) {
+                try {
+                    changes = dbxClient.files().listFolderContinue(changes.getCursor());
+                } catch (DbxException e) {
+                    throw new NuxeoException(e);
+                }
+            }
+        } while (hasMoreEntries);
 
-        userRoot.setPropertyValue("lc:deltakey",delta.cursor);
+        userRoot.setPropertyValue("lc:deltakey",changes.getCursor());
         userRoot.getCoreSession().saveDocument(userRoot);
         userRoot.getCoreSession().save();
         if (TransactionHelper.isTransactionActive()) {
@@ -151,23 +167,25 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         return session.createDocument(userFolder);
     }
 
-    protected DocumentModel getOrCreateFileDocument(DocumentModel folder, String ownerId, DbxEntry.File dbxFile) throws IOException {
+    protected DocumentModel getOrCreateFileDocument(DocumentModel folder, String ownerId, FileMetadata metadata) throws
+            IOException {
         CoreSession session = folder.getCoreSession();
         String query = String.format(
-                "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0",ownerId,dbxFile.path);
+                "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND " +
+                        "ecm:isProxy = 0",ownerId,metadata.getPathLower());
         DocumentModelList list = session.query(query);
         if (list.size()>0) return list.get(0);
 
         DropboxBlobProvider blobProvider = (DropboxBlobProvider) Framework.getService(BlobManager.class)
                 .getBlobProvider("dropbox");
-        Blob blob = blobProvider.toBlob(new LiveConnectFileInfo(ownerId,dbxFile.path));
+        Blob blob = blobProvider.toBlob(new LiveConnectFileInfo(ownerId,metadata.getPathLower()));
 
         FileManager fileManager = Framework.getService(FileManager.class);
         DocumentModel file =
                 fileManager.createDocumentFromBlob(folder.getCoreSession(),blob,folder.getPathAsString(),true,blob.getFilename());
         file.addFacet("Liveconnect");
         file.setPropertyValue("lc:owner",ownerId);
-        file.setPropertyValue("lc:itemid",dbxFile.path);
+        file.setPropertyValue("lc:itemid",metadata.getPathLower());
         session.saveDocument(file);
         return file;
     }

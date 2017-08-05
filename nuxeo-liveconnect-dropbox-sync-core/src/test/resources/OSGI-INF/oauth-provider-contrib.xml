@@ -10,6 +10,7 @@
             <authorizationServerURL>https://www.dropbox.com/1/oauth2/authorize?force_reapprove=true</authorizationServerURL>
             <clientId>empty</clientId>
             <clientSecret>empty</clientSecret>
+            <enabled>true</enabled>
         </provider>
     </extension>
 
