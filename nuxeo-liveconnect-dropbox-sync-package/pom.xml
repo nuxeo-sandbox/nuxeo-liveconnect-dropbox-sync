@@ -19,13 +19,6 @@
       <type>zip</type>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.nuxeo.marketplace.liveconnect</groupId>
-      <artifactId>marketplace-liveconnect</artifactId>
-      <version>${marketplace-liveconnect-version}</version>
-      <type>zip</type>
-      <scope>provided</scope>
-    </dependency>
 
     <!-- Additional bundles to be deployed by the MP -->
     <dependency>
