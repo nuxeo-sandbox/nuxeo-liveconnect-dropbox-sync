@@ -197,7 +197,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
                 "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0",ownerId,itemId);
         DocumentModelList list = session.query(query);
         for (DocumentModel doc:list) {
-            session.followTransition(doc,"to_delete");
+            session.followTransition(doc,"to_deleted");
         }
     }
 
