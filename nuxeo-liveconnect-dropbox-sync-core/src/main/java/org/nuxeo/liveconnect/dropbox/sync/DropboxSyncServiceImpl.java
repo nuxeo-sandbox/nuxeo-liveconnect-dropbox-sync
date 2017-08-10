@@ -194,7 +194,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
             IOException {
         CoreSession session = folder.getCoreSession();
         String query = String.format(
-                "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0",ownerId,itemId);
+                "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0 AND ecm:currentLifeCycleState <> 'deleted'",ownerId,itemId);
         DocumentModelList list = session.query(query);
         for (DocumentModel doc:list) {
             session.followTransition(doc,"to_deleted");
