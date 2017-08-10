@@ -198,6 +198,8 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         DocumentModelList list = session.query(query);
         for (DocumentModel doc:list) {
             session.followTransition(doc,"to_deleted");
+            doc.setPropertyValue("file:content",null);
+            doc = session.saveDocument(doc);
         }
     }
 
