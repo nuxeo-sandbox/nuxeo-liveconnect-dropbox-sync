@@ -60,6 +60,7 @@ public class DropboxSyncWorker extends AbstractWork {
             setStatus("Failed");
         }
         session.save();
+        commitOrRollbackTransaction();
     }
 
     @Override
