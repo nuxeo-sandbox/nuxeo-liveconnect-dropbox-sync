@@ -15,7 +15,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <marketplace-liveconnect-version>1.2.3</marketplace-liveconnect-version>
+    <marketplace-liveconnect-version>1.2.4</marketplace-liveconnect-version>
   </properties>
 
   <modules>
