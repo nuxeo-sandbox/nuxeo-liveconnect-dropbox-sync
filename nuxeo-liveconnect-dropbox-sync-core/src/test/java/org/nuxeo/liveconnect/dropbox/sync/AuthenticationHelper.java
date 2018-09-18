@@ -5,6 +5,8 @@ import org.nuxeo.ecm.platform.oauth2.tokens.OAuth2TokenStore;
 
 public class AuthenticationHelper {
 
+    public static final String TEST_PROVIDER = "dropbox-sync";
+
     public static NuxeoOAuth2Token createToken(String username, String providerName) {
         OAuth2TokenStore store = new OAuth2TokenStore(providerName);
         NuxeoOAuth2Token token = new NuxeoOAuth2Token(

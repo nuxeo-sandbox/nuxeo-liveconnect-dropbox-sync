@@ -28,7 +28,11 @@ import org.nuxeo.runtime.test.runner.FeaturesRunner;
 @RunWith(FeaturesRunner.class)
 @Features(AutomationFeature.class)
 @RepositoryConfig(init = DefaultRepositoryInit.class, cleanup = Granularity.METHOD)
-@Deploy("nuxeo-liveconnect-dropbox-sync-core")
+@Deploy({
+    "org.nuxeo.ecm.platform.oauth",
+    "nuxeo-liveconnect-dropbox-sync-core"
+})
+
 public class TestSyncDropboxContentOp {
 
     @Inject
@@ -42,7 +46,7 @@ public class TestSyncDropboxContentOp {
 
     @Test
     public void shouldCallWithParameters() throws OperationException {
-        NuxeoOAuth2Token token = AuthenticationHelper.createToken(session.getPrincipal().getName(),"dropbox");
+        NuxeoOAuth2Token token = AuthenticationHelper.createToken(session.getPrincipal().getName(),AuthenticationHelper.TEST_PROVIDER);
         Assume.assumeTrue(token.getAccessToken()!=null);
 
         DocumentModel rootFolder = session.createDocumentModel(session.getRootDocument().getPathAsString(),

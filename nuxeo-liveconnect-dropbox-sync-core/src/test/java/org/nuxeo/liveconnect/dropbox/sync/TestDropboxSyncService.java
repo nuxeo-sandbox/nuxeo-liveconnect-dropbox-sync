@@ -28,9 +28,7 @@ import org.nuxeo.runtime.test.runner.LocalDeploy;
     "org.nuxeo.ecm.core.cache",
     "org.nuxeo.ecm.platform.filemanager.core",
     "org.nuxeo.ecm.platform.types.core",
-    "nuxeo-liveconnect-dropbox-sync-core"})
-@LocalDeploy({
-    "nuxeo-liveconnect-dropbox-sync-core:OSGI-INF/oauth-provider-contrib.xml",
+    "nuxeo-liveconnect-dropbox-sync-core"
 })
 public class TestDropboxSyncService {
 
@@ -44,8 +42,7 @@ public class TestDropboxSyncService {
     public void testService() {
         assertNotNull(dropboxsyncservice);
 
-        NuxeoOAuth2Token token = AuthenticationHelper.createToken(session.getPrincipal().getName(),"dropbox");
-        Assume.assumeTrue(token.getAccessToken()!=null);
+        NuxeoOAuth2Token token = AuthenticationHelper.createToken(session.getPrincipal().getName(),AuthenticationHelper.TEST_PROVIDER);
 
         DocumentModel rootFolder = session.createDocumentModel(session.getRootDocument().getPathAsString(),
                 "rootFolder","Folder");
@@ -53,7 +50,7 @@ public class TestDropboxSyncService {
         session.saveDocument(rootFolder);
         session.save();
 
-        dropboxsyncservice.sync(rootFolder,"dropbox");
+        dropboxsyncservice.sync(rootFolder,AuthenticationHelper.TEST_PROVIDER);
 
         DocumentModelList docs = session.query("Select * From File");
         assertTrue(docs.size()>0);

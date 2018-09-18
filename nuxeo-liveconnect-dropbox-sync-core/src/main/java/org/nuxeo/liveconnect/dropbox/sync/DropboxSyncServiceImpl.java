@@ -97,9 +97,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
 
         DbxClientV2 dbxClient = new DbxClientV2(config, token.getAccessToken());
 
-        String userId = token.getServiceLogin();
-
-        DocumentModel userRoot = getOrCreateUserRoot(root,token.getNuxeoLogin(),userId);
+        DocumentModel userRoot = getOrCreateUserRoot(root,token,token.getServiceLogin());
         String deltaKey =(String) userRoot.getPropertyValue("lc:deltakey");
 
         ListFolderResult changes;
@@ -119,13 +117,13 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
             for (Metadata entry : changes.getEntries()) {
                 if (entry instanceof DeletedMetadata) {
                     System.out.println("Deleted: " + entry.getPathLower());
-                    deleteFileDocument(userRoot,userId,entry.getPathLower());
+                    deleteFileDocument(userRoot,token,entry.getPathLower());
                 } else {
                     if (entry instanceof FolderMetadata) {
                         continue;
                     }
                     FileMetadata metadata = (FileMetadata) entry;
-                    getOrCreateFileDocument(userRoot,userId,metadata);
+                    getOrCreateFileDocument(userRoot,token,metadata);
                     System.out.println("Added or modified: " + metadata.getPathLower());
                 }
             }
@@ -148,28 +146,29 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         }
     }
 
-    protected DocumentModel getOrCreateUserRoot(DocumentModel dropboxRoot, String nuxeoUsername, String serviceid) {
+    protected DocumentModel getOrCreateUserRoot(DocumentModel dropboxRoot, NuxeoOAuth2Token token, String serviceid) {
         CoreSession session = dropboxRoot.getCoreSession();
         String query = String.format("Select * From Workspace Where lc:owner = '%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0",serviceid);
         DocumentModelList list = session.query(query);
         if (list.size()>0) return list.get(0);
 
         UserManager userManager = Framework.getService(UserManager.class);
-        NuxeoPrincipal principal = userManager.getPrincipal(nuxeoUsername);
+        NuxeoPrincipal principal = userManager.getPrincipal(token.getNuxeoLogin());
         String fullname = ""+principal.getFirstName()+" "+principal.getLastName();
 
         DocumentModel userFolder =
                 session.createDocumentModel(
-                        dropboxRoot.getPathAsString(),nuxeoUsername,"Workspace");
+                        dropboxRoot.getPathAsString(),token.getServiceLogin(),"Workspace");
         userFolder.setPropertyValue("dc:title",fullname);
         userFolder.addFacet("Liveconnect");
         userFolder.setPropertyValue("lc:owner",serviceid);
         return session.createDocument(userFolder);
     }
 
-    protected DocumentModel getOrCreateFileDocument(DocumentModel folder, String ownerId, FileMetadata metadata) throws
+    protected DocumentModel getOrCreateFileDocument(DocumentModel folder, NuxeoOAuth2Token token, FileMetadata metadata) throws
             IOException {
         CoreSession session = folder.getCoreSession();
+        String ownerId = token.getServiceLogin();
         String query = String.format(
                 "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND " +
                         "ecm:isProxy = 0",ownerId,metadata.getPathLower());
@@ -177,7 +176,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         if (list.size()>0) return list.get(0);
 
         DropboxBlobProvider blobProvider = (DropboxBlobProvider) Framework.getService(BlobManager.class)
-                .getBlobProvider("dropbox");
+                .getBlobProvider(token.getServiceName());
         Blob blob = blobProvider.toBlob(new LiveConnectFileInfo(ownerId,metadata.getPathLower()));
 
         FileManager fileManager = Framework.getService(FileManager.class);
@@ -190,9 +189,9 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         return file;
     }
 
-    protected void deleteFileDocument(DocumentModel folder, String ownerId, String itemId) throws
-            IOException {
+    protected void deleteFileDocument(DocumentModel folder, NuxeoOAuth2Token token, String itemId) throws IOException {
         CoreSession session = folder.getCoreSession();
+        String ownerId = token.getServiceLogin();
         String query = String.format(
                 "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0 AND ecm:currentLifeCycleState <> 'deleted'",ownerId,itemId);
         DocumentModelList list = session.query(query);

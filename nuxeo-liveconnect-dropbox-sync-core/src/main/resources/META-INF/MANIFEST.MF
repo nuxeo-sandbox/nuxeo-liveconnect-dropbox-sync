@@ -11,3 +11,4 @@ Nuxeo-Component: OSGI-INF/service-contrib.xml,
  OSGI-INF/schema-contrib.xml,
  OSGI-INF/operation-contrib.xml,
  OSGI-INF/queue-contrib.xml,
+ OSGI-INF/liveconnect-contrib.xml
