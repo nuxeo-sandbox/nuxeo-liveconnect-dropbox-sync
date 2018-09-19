@@ -7,6 +7,7 @@ import com.dropbox.core.v2.files.*;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.core.blob.BlobManager;
+import org.nuxeo.ecm.core.trash.TrashService;
 import org.nuxeo.ecm.liveconnect.core.LiveConnectFileInfo;
 import org.nuxeo.ecm.liveconnect.dropbox.DropboxBlobProvider;
 import org.nuxeo.ecm.platform.filemanager.api.FileManager;
@@ -195,11 +196,8 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         String query = String.format(
                 "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0 AND ecm:currentLifeCycleState <> 'deleted'",ownerId,itemId);
         DocumentModelList list = session.query(query);
-        for (DocumentModel doc:list) {
-            session.followTransition(doc,"to_deleted");
-            doc.setPropertyValue("file:content",null);
-            doc = session.saveDocument(doc);
-        }
+        TrashService trashService = Framework.getService(TrashService.class);
+        trashService.trashDocuments(list);
     }
 
 }
