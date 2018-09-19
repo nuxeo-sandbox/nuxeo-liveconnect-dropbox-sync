@@ -103,7 +103,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         ListFolderResult changes;
         try {
             if (deltaKey!=null) {
-                changes = dbxClient.files().listFolder(deltaKey);
+                changes = dbxClient.files().listFolderContinue(deltaKey);
             } else {
                 changes = dbxClient.files().listFolderBuilder("").withRecursive(true).start();
             }
