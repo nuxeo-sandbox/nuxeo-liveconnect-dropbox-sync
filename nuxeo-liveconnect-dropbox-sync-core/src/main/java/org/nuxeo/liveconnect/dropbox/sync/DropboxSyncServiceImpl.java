@@ -125,7 +125,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         do {
             for (Metadata entry : changes.getEntries()) {
                 if (entry instanceof DeletedMetadata) {
-                    System.out.println("Deleted: " + entry.getPathLower());
+                    log.warn(("Deleted: " + entry.getPathLower());
                     deleteFileDocument(userRoot,token,entry.getPathLower());
                 } else {
                     if (entry instanceof FolderMetadata) {
@@ -137,7 +137,8 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
                        TrashService trashService = Framework.getService(TrashService.class);
                        trashService.untrashDocument(doc);
                     }
-                    System.out.println("Added or modified: " + metadata.getPathLower());
+                    log.warn("Added or modified: " + metadata.getPathLower());
+
                 }
             }
             hasMoreEntries = changes.getHasMore();
