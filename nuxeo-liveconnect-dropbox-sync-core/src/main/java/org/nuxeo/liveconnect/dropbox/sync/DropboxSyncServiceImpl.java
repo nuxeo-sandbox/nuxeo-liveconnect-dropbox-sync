@@ -167,7 +167,12 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
 
         UserManager userManager = Framework.getService(UserManager.class);
         NuxeoPrincipal principal = userManager.getPrincipal(token.getNuxeoLogin());
-        String fullname = ""+principal.getFirstName()+" "+principal.getLastName();
+        String fullname;
+        if (principal!=null) {
+            fullname = principal.getFirstName()+" "+principal.getLastName();
+        } else {
+            fullname = token.getNuxeoLogin();
+        }
 
         DocumentModel userFolder =
                 session.createDocumentModel(
