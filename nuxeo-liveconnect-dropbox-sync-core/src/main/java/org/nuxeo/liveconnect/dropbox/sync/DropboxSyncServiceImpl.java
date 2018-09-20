@@ -201,7 +201,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         CoreSession session = folder.getCoreSession();
         String ownerId = token.getServiceLogin();
         String query = String.format(
-                "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0 AND ecm:currentLifeCycleState <> 'deleted'",ownerId,itemId);
+                "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0 AND ecm:isTrashed = 0",ownerId,itemId);
         DocumentModelList list = session.query(query);
         TrashService trashService = Framework.getService(TrashService.class);
         trashService.trashDocuments(list);
