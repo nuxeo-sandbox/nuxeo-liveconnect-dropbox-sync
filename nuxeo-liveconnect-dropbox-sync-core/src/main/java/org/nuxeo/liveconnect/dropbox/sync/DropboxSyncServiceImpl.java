@@ -125,7 +125,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
         do {
             for (Metadata entry : changes.getEntries()) {
                 if (entry instanceof DeletedMetadata) {
-                    log.warn(("Deleted: " + entry.getPathLower());
+                    log.warn("Deleted: " + entry.getPathLower());
                     deleteFileDocument(userRoot,token,entry.getPathLower());
                 } else {
                     if (entry instanceof FolderMetadata) {
