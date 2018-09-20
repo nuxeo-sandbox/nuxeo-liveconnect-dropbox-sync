@@ -6,8 +6,8 @@ import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.*;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import org.nuxeo.ecm.core.api.*;
+import org.nuxeo.ecm.core.api.trash.TrashService;
 import org.nuxeo.ecm.core.blob.BlobManager;
-import org.nuxeo.ecm.core.trash.TrashService;
 import org.nuxeo.ecm.liveconnect.core.LiveConnectFileInfo;
 import org.nuxeo.ecm.liveconnect.dropbox.DropboxBlobProvider;
 import org.nuxeo.ecm.platform.filemanager.api.FileManager;
@@ -124,7 +124,11 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
                         continue;
                     }
                     FileMetadata metadata = (FileMetadata) entry;
-                    getOrCreateFileDocument(userRoot,token,metadata);
+                    DocumentModel doc = getOrCreateFileDocument(userRoot,token,metadata);
+                    if (doc.isTrashed()) {
+                       TrashService trashService = Framework.getService(TrashService.class);
+                       trashService.untrashDocument(doc);
+                    }
                     System.out.println("Added or modified: " + metadata.getPathLower());
                 }
             }
@@ -174,7 +178,10 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
                 "Select * From Document Where lc:owner = '%s' AND lc:itemid='%s' AND ecm:isCheckedInVersion = 0 AND " +
                         "ecm:isProxy = 0",ownerId,metadata.getPathLower());
         DocumentModelList list = session.query(query);
-        if (list.size()>0) return list.get(0);
+
+        if (list.size()>0) {
+            return list.get(0);
+        }
 
         DropboxBlobProvider blobProvider = (DropboxBlobProvider) Framework.getService(BlobManager.class)
                 .getBlobProvider(token.getServiceName());
