@@ -5,6 +5,8 @@ import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.*;
 import com.google.api.client.auth.oauth2.StoredCredential;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.nuxeo.ecm.core.api.*;
 import org.nuxeo.ecm.core.api.trash.TrashService;
 import org.nuxeo.ecm.core.blob.BlobManager;
@@ -25,6 +27,8 @@ import java.util.Collection;
 import java.util.Locale;
 
 public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxSyncService {
+
+    private static final Log log = LogFactory.getLog(DropboxSyncServiceImpl.class);
 
     private static final String APPLICATION_NAME = "Nuxeo/0";
 
@@ -83,7 +87,11 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
             Collection<StoredCredential> credentials = store.values();
             for (StoredCredential credential: credentials) {
                 NuxeoOAuth2Token token = store.getToken(credential.getAccessToken());
-                syncUserFolder(token,root);
+                if (token != null) {
+                    syncUserFolder(token, root);
+                } else {
+                    log.warn("No Token for "+credential.toString());
+                }
             }
         } catch (IOException e) {
             throw new NuxeoException(e);
