@@ -153,7 +153,7 @@ public class DropboxSyncServiceImpl extends DefaultComponent implements DropboxS
 
     protected DocumentModel getOrCreateUserRoot(DocumentModel dropboxRoot, NuxeoOAuth2Token token, String serviceid) {
         CoreSession session = dropboxRoot.getCoreSession();
-        String query = String.format("Select * From Workspace Where lc:owner = '%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0",serviceid);
+        String query = String.format("Select * From Workspace Where lc:owner = '%s' AND ecm:isCheckedInVersion = 0 AND ecm:isProxy = 0 AND ecm:isTrashed = 0",serviceid);
         DocumentModelList list = session.query(query);
         if (list.size()>0) return list.get(0);
 
