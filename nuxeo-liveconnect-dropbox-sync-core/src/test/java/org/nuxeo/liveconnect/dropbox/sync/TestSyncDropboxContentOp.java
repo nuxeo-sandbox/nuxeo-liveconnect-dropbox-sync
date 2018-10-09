@@ -20,7 +20,6 @@ import org.nuxeo.ecm.core.test.annotations.RepositoryConfig;
 import org.nuxeo.ecm.core.work.api.Work;
 import org.nuxeo.ecm.core.work.api.WorkManager;
 import org.nuxeo.ecm.platform.oauth2.tokens.NuxeoOAuth2Token;
-import org.nuxeo.ecm.platform.test.PlatformFeature;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -47,7 +46,7 @@ public class TestSyncDropboxContentOp {
     @Test
     public void shouldCallWithParameters() throws OperationException {
         NuxeoOAuth2Token token = AuthenticationHelper.createToken(session.getPrincipal().getName(),AuthenticationHelper.TEST_PROVIDER);
-        Assume.assumeTrue(token.getAccessToken()!=null);
+        Assume.assumeTrue("No token configuration, no test", token.getAccessToken()!=null);
 
         DocumentModel rootFolder = session.createDocumentModel(session.getRootDocument().getPathAsString(),
                 "rootFolder","Folder");
